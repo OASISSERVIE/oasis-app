@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OASIS SERVICE</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root { --ink:#1b1d36; --muted:#6b7090; --line:#e6e8f2; --bg:#f0ebff; --card:#ffffff;
+  --grad:linear-gradient(135deg,#7c3aed,#db2777 50%,#f97316);
+  --ok:#16a34a; --bad:#e11d48; --wa:#25d366; }
+* { box-sizing:border-box; }
+body { margin:0; font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--ink); background:var(--bg); font-size:16px; line-height:1.4; }
+[hidden] { display:none !important; }
+button { font-family:inherit; cursor:pointer; }
+
+.hero { background:radial-gradient(circle at 85% 15%,rgba(255,255,255,.3),transparent 42%),var(--grad); color:#fff; padding:22px 18px 46px; box-shadow:0 20px 40px -20px rgba(124,58,237,.7); }
+.hero-in { max-width:980px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+.hero h1 { margin:0; font-size:26px; font-weight:800; letter-spacing:.5px; }
+.hero p { margin:4px 0 0; font-size:13px; opacity:.92; }
+.wrap { max-width:980px; margin:-30px auto 0; padding:0 14px 48px; }
+
+.home-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; margin-bottom:16px; }
+.tile { border:none; border-radius:22px; padding:20px; color:#fff; text-align:left; font-size:19px; font-weight:800; box-shadow:0 14px 30px -12px rgba(27,29,54,.35); transition:transform .15s; }
+.tile:hover { transform:translateY(-2px); }
+.tile small { display:block; font-size:13px; font-weight:500; opacity:.92; margin-top:6px; }
+.t1 { background:linear-gradient(135deg,#7c3aed,#c026d3); box-shadow:0 14px 30px -10px rgba(124,58,237,.6) !important; }
+.t2 { background:linear-gradient(135deg,#0284c7,#06b6d4); box-shadow:0 14px 30px -10px rgba(2,132,199,.6) !important; }
+.t3 { background:linear-gradient(135deg,#16a34a,#a3e635); color:#052e16; box-shadow:0 14px 30px -10px rgba(22,163,74,.6) !important; }
+.t4 { background:linear-gradient(135deg,#f97316,#ec4899); box-shadow:0 14px 30px -10px rgba(236,72,153,.6) !important; }
+
+.stats { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:16px; }
+.stat { background:var(--card); border-radius:18px; padding:14px 8px; text-align:center; box-shadow:0 6px 18px -10px rgba(27,29,54,.25); }
+.stat b { display:block; font-size:24px; font-weight:800; }
+.stat span { font-size:12px; color:var(--muted); }
+.stat.late b { color:var(--bad); }
+.stat:nth-child(1) b { color:#7c3aed; }
+.stat:nth-child(2) b { color:#0284c7; }
+.stat:nth-child(3) b { color:#16a34a; }
+.stat:nth-child(4) b { color:#f97316; }
+
+.card { background:var(--card); border-radius:22px; padding:20px; margin-bottom:16px; box-shadow:0 12px 30px -14px rgba(124,58,237,.3); }
+.card h2 { margin:0 0 4px; font-size:20px; font-weight:800; }
+.card .lead { color:var(--muted); font-size:14px; margin:0 0 14px; }
+.card h3 { font-size:15px; font-weight:700; margin:16px 0 8px; }
+
+.back { background:none; border:none; color:var(--muted); font-size:14px; font-weight:600; padding:6px 0; margin-bottom:8px; }
+
+/* Step progress */
+.steps { display:flex; gap:8px; margin-bottom:18px; }
+.steps div { flex:1; text-align:center; font-size:12px; font-weight:700; color:var(--muted); }
+.steps div i { display:flex; align-items:center; justify-content:center; width:30px; height:30px; margin:0 auto 4px; border-radius:50%; background:#eef0f8; font-style:normal; font-size:14px; }
+.steps div.on { color:var(--ink); }
+.steps div.on i { background:var(--grad); color:#fff; }
+.steps div.done i { background:var(--ok); color:#fff; }
+
+label { display:block; font-size:14px; font-weight:700; margin:0 0 6px; }
+input, select, textarea { width:100%; padding:13px 14px; border:2px solid var(--line); border-radius:14px; font-size:16px; background:#fff; color:var(--ink); font-family:inherit; }
+input:focus, select:focus, textarea:focus { outline:none; border-color:#6366f1; }
+textarea { font-size:14px; }
+.field { margin-bottom:14px; }
+.err { color:var(--bad); font-size:13px; margin-top:4px; min-height:0; }
+.hint { color:var(--muted); font-size:13px; margin-top:6px; }
+
+.chips { display:flex; gap:8px; flex-wrap:wrap; }
+.chip { border:2px solid var(--line); background:#fff; border-radius:999px; padding:10px 16px; font-size:15px; font-weight:600; color:var(--ink); }
+.chip.on { background:var(--ink); border-color:var(--ink); color:#fff; }
+.chip.big { padding:14px 18px; border-radius:18px; }
+
+.btns { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; justify-content:flex-end; }
+.btn { border:none; border-radius:14px; padding:14px 22px; font-size:16px; font-weight:700; background:#eef0f8; color:var(--ink); }
+.btn.go { background:var(--grad); color:#fff; box-shadow:0 10px 20px -10px rgba(236,72,153,.7); }
+.btn.wa { background:var(--wa); color:#fff; }
+.btn.ghost { background:#fff; border:2px solid var(--line); }
+.btn.sm { padding:9px 14px; font-size:14px; border-radius:12px; }
+
+.pill { display:inline-block; padding:6px 12px; border-radius:999px; font-size:13px; font-weight:700; white-space:nowrap; }
+.s0 { background:#e0e7ff; color:#3730a3; }
+.s1 { background:#ffedd5; color:#9a3412; }
+.s2 { background:#dbeafe; color:#1e40af; }
+.s3 { background:#dcfce7; color:#166534; }
+.s4 { background:#f3e8ff; color:#6b21a8; }
+.late-pill { background:#ffe4e6; color:var(--bad); }
+.w-ok { background:#dcfce7; color:#166534; }
+.w-no { background:#f1f5f9; color:#475569; }
+
+.search { width:100%; margin-bottom:12px; }
+.list { display:grid; gap:10px; }
+.cust { display:flex; justify-content:space-between; align-items:center; gap:10px; background:#f8f9fe; border-radius:18px; padding:14px 16px; }
+.cust b { font-size:16px; }
+.sub { color:var(--muted); font-size:13px; }
+
+.item { background:#fff; border:2px solid var(--line); border-radius:18px; padding:14px; margin-bottom:10px; }
+.item.late { border-color:#fecdd3; background:#fff7f8; }
+.item-top { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start; }
+.item-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+
+.bars { display:grid; gap:10px; }
+.bar-row { display:grid; grid-template-columns:150px 1fr 36px; gap:10px; align-items:center; font-size:14px; }
+.bar { height:12px; border-radius:999px; background:#eef0f8; overflow:hidden; }
+.bar i { display:block; height:100%; border-radius:999px; background:var(--grad); }
+
+.hist div { padding:9px 0; border-bottom:1px solid var(--line); font-size:14px; }
+.empty { text-align:center; color:var(--muted); padding:22px; }
+
+.overlay { position:fixed; inset:0; background:rgba(27,29,54,.5); display:flex; align-items:center; justify-content:center; padding:14px; z-index:10; backdrop-filter:blur(3px); }
+.modal { background:#fff; border-radius:26px; padding:22px; width:100%; max-width:560px; max-height:92vh; overflow-y:auto; box-shadow:0 30px 60px -20px rgba(27,29,54,.5); }
+.modal h2 { margin:0 0 4px; font-size:21px; font-weight:800; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+@media (max-width:600px) {
+  .hero { padding:14px 14px 34px; }
+  .hero h1 { font-size:20px; }
+  .hero p { font-size:11px; }
+  .wrap { margin-top:-22px; padding:0 10px 30px; }
+  .home-grid { grid-template-columns:1fr 1fr; gap:10px; }
+  .tile { padding:14px; font-size:15px; border-radius:18px; }
+  .tile small { font-size:11px; }
+  .stats { grid-template-columns:repeat(3,1fr); gap:6px; }
+  .stat { padding:10px 4px; border-radius:14px; }
+  .stat b { font-size:19px; }
+  .stat span { font-size:11px; }
+  .card { padding:14px; border-radius:18px; }
+  .card h2 { font-size:17px; }
+  .grid2 { grid-template-columns:1fr; }
+  .btns .btn { flex:1; }
+  .bar-row { grid-template-columns:90px 1fr 26px; font-size:13px; }
+  .overlay { align-items:flex-end; padding:0; }
+  .modal { max-width:100%; border-radius:22px 22px 0 0; max-height:94vh; padding:18px; }
+  .item-top { flex-direction:column; }
+  .steps div { font-size:11px; }
+}
+@media (min-width:601px) and (max-width:1024px) {
+  .home-grid { grid-template-columns:repeat(2,1fr); }
+}
+
+.toast { position:fixed; left:50%; bottom:22px; transform:translateX(-50%); background:var(--ink); color:#fff; padding:13px 20px; border-radius:16px; font-size:15px; display:none; z-index:20; box-shadow:0 12px 30px -10px rgba(0,0,0,.5); }
+.qr { background:#fff; padding:8px; border-radius:14px; display:inline-block; box-shadow:0 6px 16px -8px rgba(27,29,54,.3); }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-in">
+    <div>
+      <h1>OASIS SERVICE</h1>
+      <p>OASIS INDIA IT STORE PRIVATE LIMITED</p>
+    </div>
+    <div class="sub" id="todayLabel" style="color:#fff;opacity:.9"></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- HOME -->
+  <div id="home">
+    <div class="home-grid">
+      <button class="tile t1" onclick="startNew()">New item<small>Add a product in 3 easy steps</small></button>
+      <button class="tile t2" onclick="go('list')">All products<small>Search, edit, and update status</small></button>
+      <button class="tile t3" onclick="go('ready')">Ready to deliver<small>Tell customer and hand over</small></button>
+      <button class="tile t4" onclick="go('track')">Customer track<small>Check with ticket or phone</small></button>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="sTickets">0</b><span>Open tickets</span></div>
+      <div class="stat"><b id="sServ">0</b><span>In service</span></div>
+      <div class="stat"><b id="sReady">0</b><span>Ready</span></div>
+      <div class="stat"><b id="sDeliv">0</b><span>Delivered today</span></div>
+      <div class="stat late"><b id="sLate">0</b><span>Late (7+ days)</span></div>
+    </div>
+    <section class="card">
+      <h2>Status overview</h2>
+      <p class="lead">How many products are in each stage</p>
+      <div class="bars" id="bars"></div>
+    </section>
+    <div class="btns" style="justify-content:flex-start">
+      <button class="btn ghost sm" onclick="go('backup')">Backup and restore</button>
+      <button class="btn ghost sm" onclick="go('settings')">Message templates</button>
+    </div>
+  </div>
+
+  <!-- ADD ITEM: 3 STEPS -->
+  <div id="pAdd" hidden>
+    <button class="back" onclick="go('home')">Back to home</button>
+    <section class="card">
+      <h2>New item</h2>
+      <p class="lead">Follow 3 steps. Customer message will open automatically at the end.</p>
+
+      <div class="steps">
+        <div id="st1"><i>1</i>Customer</div>
+        <div id="st2"><i>2</i>Product</div>
+        <div id="st3"><i>3</i>Details</div>
+      </div>
+
+      <!-- Step 1 -->
+      <div id="s1">
+        <div class="field">
+          <label>Is this a new customer?</label>
+          <select id="fTicket" onchange="toggleCustomer()"></select>
+        </div>
+        <div class="chips" style="margin-bottom:12px"><button class="chip big on" id="modeCust" onclick="setMode(false)">Customer pickup</button><button class="chip big" id="modeStore" onclick="setMode(true)">From our store</button></div>
+        <div id="rowName" class="field"><label>Customer name</label><input id="fName" placeholder="For example Ravi Kumar"><div class="err" id="eName"></div></div>
+        <div id="rowPhone" class="field"><label>Phone number</label><input id="fPhone" placeholder="10 digit number" inputmode="tel"><div class="err" id="ePhone"></div></div>
+        <div class="btns"><button class="btn go" onclick="nextStep(1)">Next</button></div>
+      </div>
+
+      <!-- Step 2 -->
+      <div id="s2" hidden>
+        <label>Pick the product</label>
+        <div class="chips" id="typeChips" style="margin-bottom:14px"></div>
+        <div class="field">
+          <label>Product not in the list? Type its name</label>
+          <input id="fCustomType" list="customList" placeholder="For example CCTV camera, Printer, Keyboard">
+          <datalist id="customList"></datalist>
+          <div class="hint">Typed name will be saved, so next time you can pick it from the list.</div>
+          <div class="err" id="eType"></div>
+        </div>
+        <div class="btns">
+          <button class="btn ghost" onclick="prevStep(2)">Back</button>
+          <button class="btn go" onclick="nextStep(2)">Next</button>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div id="s3" hidden>
+        <div class="grid2">
+          <div class="field"><label>Brand</label><input id="fBrand" placeholder="For example MSI"></div>
+          <div class="field"><label>Model</label><input id="fModel" placeholder="For example B550"><div class="err" id="eModel"></div></div>
+          <div class="field"><label>Serial number</label><input id="fSerial" placeholder="Scan barcode here, or type serial" autocomplete="off"><div class="err" id="eSerial"></div></div>
+          <div class="field"><label>Invoice number</label><input id="fInv" placeholder="For example INV-1042"></div>
+          <div class="field"><label>Date of purchase</label><input id="fDop" type="date"></div>
+          <div class="field"><label>Quantity</label><input id="fQty" type="number" min="1" value="1"></div>
+          <div class="field"><label>Collected by (our staff name)</label><input id="fStaff" list="staffList" placeholder="For example Kumar"><datalist id="staffList"></datalist></div>
+          <div class="field" style="grid-column:1/-1"><label>Problem / issue</label><input id="fIssue" placeholder="For example not switching on, screen broken"></div>
+          <div class="field"><label>Accessories received</label><input id="fAcc" placeholder="For example charger, box, cover"></div>
+          <div class="field"><label>Condition</label><select id="fCond"><option>Working</option><option>Scratch</option><option>Dent</option><option>Other</option></select></div>
+          <div class="field"><label>Product photo (optional)</label><input id="fPhoto" type="file" accept="image/*"></div>
+        </div>
+        <div class="btns">
+          <button class="btn ghost" onclick="prevStep(3)">Back</button>
+          <button class="btn go" onclick="saveNew(false)">Save item</button>
+          <button class="btn ghost" onclick="saveNew(true)">Save and add one more</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ALL PRODUCTS -->
+  <div id="pList" hidden>
+    <button class="back" onclick="go('home')">Back to home</button>
+    <section class="card">
+      <h2>All products</h2>
+      <p class="lead">Search by ticket, name, phone, serial, or model</p>
+      <input class="search" id="search" placeholder="Type to search" oninput="renderList()">
+      <div class="list" id="tList"></div>
+    </section>
+    <section class="card" id="detailCard" hidden>
+      <div class="item-top">
+        <div>
+          <h2 id="dTitle"></h2>
+          <div class="sub" id="dSub"></div>
+        </div>
+        <div class="item-actions" style="margin:0">
+          <button class="btn ghost sm" onclick="editCustomer()">Edit customer</button>
+        </div>
+      </div>
+      <div style="margin-top:14px" id="dItems"></div>
+      <div style="margin-top:14px" id="qrBox"></div>
+      <h3>History</h3>
+      <div class="hist" id="dHist"></div>
+    </section>
+  </div>
+
+  <!-- READY TO DELIVER -->
+  <div id="pReady" hidden>
+    <button class="back" onclick="go('home')">Back to home</button>
+    <section class="card">
+      <h2>Ready to deliver</h2>
+      <p class="lead">Send SMS to customer and hand over the product</p>
+      <div class="list" id="rList"></div>
+    </section>
+  </div>
+
+  <!-- CUSTOMER TRACK -->
+  <div id="pTrack" hidden>
+    <button class="back" onclick="go('home')">Back to home</button>
+    <section class="card">
+      <h2>Where is my product?</h2>
+      <p class="lead">Enter ticket ID (for example SR0111202601) or phone number</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <input id="trackQ" placeholder="Ticket ID or phone number" style="flex:1;min-width:220px">
+        <button class="btn go" onclick="trackNow()">Check</button>
+      </div>
+      <div id="trackResult" style="margin-top:16px"></div>
+    </section>
+  </div>
+
+  <!-- BACKUP -->
+  <div id="pBackup" hidden>
+    <button class="back" onclick="go('home')">Back to home</button>
+    <section class="card">
+      <h2>Backup and restore</h2>
+      <p class="lead">Create backup text and save it. To restore, paste it and press Restore.</p>
+      <button class="btn go sm" onclick="makeBackup()">Create backup text</button>
+      <textarea id="backupText" rows="5" style="margin-top:12px"></textarea>
+      <h3>Restore</h3>
+      <textarea id="restoreText" rows="4" placeholder="Paste backup text here"></textarea>
+      <div class="btns" style="justify-content:flex-start"><button class="btn ghost sm" onclick="restoreBackup()">Restore</button></div>
+    </section>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="pSettings" hidden>
+    <button class="back" onclick="go('home')">Back to home</button>
+    <section class="card">
+      <h2>Message templates</h2>
+      <p class="lead">Words in brackets fill automatically: {name}, {item}, {model}, {serial}, {ticket}, {status}, {result}, {shop}</p>
+      <div class="field"><label>When product is received</label><textarea id="tplReceived" rows="2"></textarea></div>
+      <div class="field"><label>When in service</label><textarea id="tplService" rows="2"></textarea></div>
+      <div class="field"><label>When ready for delivery</label><textarea id="tplReady" rows="2"></textarea></div>
+      <div class="field"><label>When delivered</label><textarea id="tplDelivered" rows="2"></textarea></div>
+      <div class="btns"><button class="btn go" onclick="saveSettings()">Save templates</button></div>
+    </section>
+  </div>
+</div>
+
+<!-- STATUS POPUP -->
+<div class="overlay" id="overlay" hidden onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h2 id="mTitle"></h2>
+    <div class="sub" id="mSub" style="margin-bottom:14px"></div>
+    <label>Status</label>
+    <div class="chips" id="mStatus" style="margin-bottom:14px"></div>
+    <label>What was done?</label>
+    <div class="chips" id="mResult" style="margin-bottom:14px"></div>
+    <div id="mReplace" hidden style="background:#f5f3ff;border-radius:18px;padding:14px;margin-bottom:14px">
+      <label>New product (replacement)</label>
+      <div class="grid2">
+        <input id="mNBrand" placeholder="New brand">
+        <input id="mNModel" placeholder="New model">
+        <div><input id="mNSerial" placeholder="New serial number"><div class="err" id="mEserial"></div></div>
+      </div>
+    </div>
+    <div id="mDeliver" hidden style="background:#ecfdf5;border-radius:18px;padding:14px;margin-bottom:14px"><label>Delivered to (customer or person name)</label><input id="mRecv" placeholder="For example Ravi Kumar"><label style="display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;margin-top:12px"><input type="checkbox" id="mConfirm" style="width:auto;margin:0;transform:scale(1.3)"> Customer confirmed: product received and checked</label></div>
+    <label>Message to customer</label>
+    <textarea id="mMsg" rows="3"></textarea>
+    <div class="field" style="margin-top:12px"><label>Note (optional)</label><input id="mNote" placeholder="For example: fan changed"></div>
+    <label style="display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600">
+      <input type="checkbox" id="mSend" style="width:auto;margin:0;transform:scale(1.3)"> Send SMS to customer
+    </label>
+    <div class="btns">
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn go" onclick="confirmItem()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT ITEM POPUP -->
+<div class="overlay" id="editOverlay" hidden onclick="if(event.target===this)closeEdit()">
+  <div class="modal">
+    <h2>Edit product</h2>
+    <div class="sub" style="margin-bottom:14px">Change any detail, then save</div>
+    <div class="field"><label>Product name</label><input id="eeType" list="customList" placeholder="For example Motherboard"></div>
+    <div class="grid2">
+      <div class="field"><label>Brand</label><input id="eeBrand"></div>
+      <div class="field"><label>Model</label><input id="eeModel"><div class="err" id="eeEModel"></div></div>
+      <div class="field"><label>Serial number</label><input id="eeSerial"><div class="err" id="eeESerial"></div></div>
+      <div class="field"><label>Invoice number</label><input id="eeInv"></div>
+      <div class="field"><label>Date of purchase</label><input id="eeDop" type="date"></div>
+      <div class="field"><label>Quantity</label><input id="eeQty" type="number" min="1"></div>
+    </div>
+    <div class="btns">
+      <button class="btn ghost" onclick="closeEdit()">Cancel</button>
+      <button class="btn go" onclick="saveEdit()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT CUSTOMER POPUP -->
+<div class="overlay" id="custOverlay" hidden onclick="if(event.target===this)closeCust()">
+  <div class="modal" style="max-width:420px">
+    <h2>Edit customer</h2>
+    <div class="sub" style="margin-bottom:14px">Change name or phone number</div>
+    <div class="field"><label>Customer name</label><input id="ceName"><div class="err" id="ceEName"></div></div>
+    <div class="field"><label>Phone number</label><input id="cePhone" inputmode="tel"><div class="err" id="ceEPhone"></div></div>
+    <div class="btns">
+      <button class="btn ghost" onclick="closeCust()">Cancel</button>
+      <button class="btn go" onclick="saveCust()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------- Constants ----------
+const SHOP = "OASIS SERVICE";
+const STATUSES = ["In shop", "In service", "In transit", "Ready for delivery", "Delivered"];
+const RESULTS = ["Service done", "Replaced", "Returned"];
+const BASE_TYPES = ["Motherboard", "Processor", "Graphic card", "SSD", "SMPS", "RAM", "Laptop", "Mobile"];
+const LATE_DAYS = 7;
+const STORE_KEY = "oasis_service_pro_v2";
+const DEFAULT_TPL = {
+  received: "Hello {name}, {shop} has received your {item} ({model}, serial {serial}) for ticket {ticket}.",
+  service: "Hello {name}, your {item} ({model}, serial {serial}) in ticket {ticket} is now in service.",
+  ready: "Hello {name}, good news! Your {item} ({model}, serial {serial}) in ticket {ticket} is ready for delivery. - {shop}",
+  delivered: "Hello {name}, your {item} ({model}, serial {serial}) has been delivered. Thank you for choosing {shop}!"
+};
+
+// ---------- Data ----------
+let tickets = [], settings = { tpl: { ...DEFAULT_TPL }, customTypes: [] };
+let nextTicketNo = 1, nextItemId = 1;
+let storeMode = false;
+let pendingPhoto = "";
+function setMode(s) {
+  storeMode = s;
+  $("modeCust").classList.toggle("on", !s);
+  $("modeStore").classList.toggle("on", s);
+  toggleCustomer();
+}
+let selectedTicket = null, modal = null, editing = null, editingCust = null;
+let currentStep = 1, newItemDraft = {};
+
+function seed() {
+  tickets = [
+    { id: "SR0111202601", name: "Ravi Kumar", phone: "9840012345", date: "2026-11-01", items: [
+      { id: 1, type: "Motherboard", brand: "MSI", model: "B550", serial: "MB-88213", dop: "2025-03-12", warranty: 12, inv: "INV-1042", qty: 1, status: "In service", result: "", oldSerials: [], deliveredOn: "", history: [{ date: "2026-11-01", text: "In shop (received)" }, { date: "2026-11-02", text: "In service" }] },
+      { id: 2, type: "Graphic card", brand: "NVIDIA", model: "RTX 3060", serial: "GPU-40177", dop: "2025-01-02", warranty: 24, inv: "INV-0931", qty: 1, status: "Ready for delivery", result: "Service done", oldSerials: [], deliveredOn: "", history: [{ date: "2026-11-01", text: "In shop (received)" }, { date: "2026-11-05", text: "Ready for delivery · Service done" }] },
+      { id: 3, type: "SSD", brand: "Kingston", model: "1TB", serial: "SSD-55091", dop: "2025-06-20", warranty: 36, inv: "INV-1108", qty: 1, status: "In shop", result: "", oldSerials: [], deliveredOn: "", history: [{ date: "2026-11-06", text: "In shop (received)" }] }
+    ]},
+    { id: "SR2810202601", name: "Priya S", phone: "9841098765", date: "2026-10-28", items: [
+      { id: 4, type: "Processor", brand: "Intel", model: "i5-12400", serial: "CPU-11820", dop: "2024-08-15", warranty: 36, inv: "INV-0877", qty: 1, status: "In transit", result: "", oldSerials: [], deliveredOn: "", history: [{ date: "2026-10-28", text: "In shop (received)" }, { date: "2026-11-03", text: "In transit" }] },
+      { id: 5, type: "SMPS", brand: "Corsair", model: "650W", serial: "PSU-2231", dop: "2024-08-15", warranty: 24, inv: "INV-0877", qty: 1, status: "Delivered", result: "Service done", oldSerials: [], deliveredOn: "2026-11-06", history: [{ date: "2026-10-28", text: "In shop (received)" }, { date: "2026-11-06", text: "Delivered · Service done" }] }
+    ]}
+  ];
+  nextTicketNo = 3; nextItemId = 6;
+}
+function save() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({ tickets, settings, nextTicketNo, nextItemId })); } catch (e) {}
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    tickets = d.tickets || []; nextTicketNo = d.nextTicketNo || 1; nextItemId = d.nextItemId || 1;
+    settings = d.settings || settings;
+    settings.tpl = { ...DEFAULT_TPL, ...(settings.tpl || {}) };
+    settings.customTypes = settings.customTypes || [];
+    return true;
+  } catch (e) { return false; }
+}
+
+// ---------- Helpers ----------
+const $ = id => document.getElementById(id);
+const today = () => new Date().toISOString().slice(0, 10);
+const fmt = d => d ? new Date(d + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "-";
+const daysBetween = (a, b) => Math.floor((new Date(b + "T00:00:00") - new Date(a + "T00:00:00")) / 86400000);
+const allItems = () => tickets.flatMap(t => t.items);
+const findTicket = id => tickets.find(t => t.id === id);
+const findItem = itemId => { for (const t of tickets) { const i = t.items.find(x => x.id === itemId); if (i) return { t, i }; } return null; };
+const serialTaken = (s, exceptId) => allItems().some(i => i.serial.toLowerCase() === s.toLowerCase() && i.id !== exceptId);
+const pill = s => `<span class="pill s${STATUSES.indexOf(s)}">${s}</span>`;
+const isLate = (t, i) => i.status !== "Delivered" && daysBetween(t.date, today()) >= LATE_DAYS;
+const allTypes = () => [...BASE_TYPES, ...settings.customTypes.filter(c => !BASE_TYPES.includes(c))];
+function newTicketId() {
+  const d = new Date();
+  const prefix = "SR" + String(d.getDate()).padStart(2, "0") + String(d.getMonth() + 1).padStart(2, "0") + d.getFullYear();
+  let n = tickets.filter(t => t.id.startsWith(prefix)).length + 1;
+  while (tickets.some(t => t.id === prefix + String(n).padStart(2, "0"))) n++;
+  return prefix + String(n).padStart(2, "0");
+}
+function renderStaffList() {
+  $("staffList").innerHTML = (settings.staffNames || []).map(s => `<option value="${String(s).replace(/"/g, "&quot;")}">`).join("");
+}
+const esc = s => String(s || "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function warrantyEnd(i) {
+  if (!i.warranty || !i.dop) return null;
+  const d = new Date(i.dop + "T00:00:00"); d.setMonth(d.getMonth() + i.warranty);
+  return d.toISOString().slice(0, 10);
+}
+function warrantyPill(i) {
+  return "";
+}
+function unusedWarrantyPill(i) {
+  if (!i.warranty) return `<span class="pill w-no">No warranty</span>`;
+  const end = warrantyEnd(i);
+  if (!end) return `<span class="pill w-no">Warranty not set</span>`;
+  return end >= today() ? `<span class="pill w-ok">Warranty till ${fmt(end)}</span>` : `<span class="pill w-no">Warranty over ${fmt(end)}</span>`;
+}
+
+// ---------- Navigation ----------
+const PAGES = { home: "home", add: "pAdd", list: "pList", ready: "pReady", track: "pTrack", backup: "pBackup", settings: "pSettings" };
+function go(page) {
+  Object.values(PAGES).forEach(id => $(id).hidden = true);
+  $(PAGES[page]).hidden = false;
+  if (page === "home") renderStats();
+  if (page === "list") renderList();
+  if (page === "ready") renderReady();
+  if (page === "settings") loadSettingsForm();
+  if (page === "backup") $("backupText").value = "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// ---------- New item: 3 steps ----------
+function startNew() {
+  refreshTicketSelect("new");
+  newItemDraft = {};
+  setMode(false);
+  clearDetailFields();
+  $("fCustomType").value = "";
+  renderTypeChips();
+  showStep(1);
+  go("add");
+}
+function showStep(n) {
+  currentStep = n;
+  if (n === 3) setTimeout(() => $("fSerial").focus(), 50);
+  [1, 2, 3].forEach(k => {
+    $("s" + k).hidden = k !== n;
+    const st = $("st" + k);
+    st.classList.toggle("on", k === n);
+    st.classList.toggle("done", k < n);
+    st.querySelector("i").textContent = k < n ? "✓" : String(k);
+  });
+}
+function prevStep(from) { showStep(from - 1); }
+function nextStep(from) {
+  if (from === 1) {
+    if ($("fTicket").value === "new" && !storeMode) {
+      const name = $("fName").value.trim(), phone = $("fPhone").value.trim();
+      $("eName").textContent = name ? "" : "Please type customer name";
+      $("ePhone").textContent = /^\d{10}$/.test(phone) ? "" : "Phone number must be 10 digits";
+      if (!name || !/^\d{10}$/.test(phone)) return;
+    }
+    showStep(2);
+  }
+  if (from === 2) {
+    const t = selectedType();
+    $("eType").textContent = t ? "" : "Pick a product or type its name";
+    if (!t) return;
+    showStep(3);
+    $("fBrand").focus();
+  }
+}
+function selectedType() {
+  const typed = $("fCustomType").value.trim();
+  if (typed) return typed;
+  return newItemDraft.chip || "";
+}
+function renderTypeChips() {
+  const chosen = selectedType();
+  $("typeChips").innerHTML = allTypes().map(t =>
+    `<button class="chip big ${t === chosen ? "on" : ""}" onclick="pickChip('${esc(t).replace(/'/g, "\\'")}')">${esc(t)}</button>`).join("");
+  $("customList").innerHTML = allTypes().map(t => `<option value="${esc(t)}">`).join("");
+}
+function pickChip(t) {
+  newItemDraft.chip = t;
+  $("fCustomType").value = "";
+  $("eType").textContent = "";
+  renderTypeChips();
+}
+$("fCustomType").addEventListener("input", () => { $("eType").textContent = ""; renderTypeChips(); });
+
+function refreshTicketSelect(value) {
+  $("fTicket").innerHTML = `<option value="new">New customer (new ticket)</option>` +
+    tickets.map(t => `<option value="${t.id}">${t.id} · ${esc(t.name)} (${t.items.length} items)</option>`).join("");
+  $("fTicket").value = value || "new";
+  toggleCustomer();
+}
+function toggleCustomer() {
+  const isNew = $("fTicket").value === "new";
+  $("rowName").hidden = !isNew || storeMode;
+  $("rowPhone").hidden = !isNew || storeMode;
+  $("fTicket").parentElement.hidden = storeMode;
+  ["fInv", "fDop", "fQty"].forEach(id => $(id).parentElement.hidden = !isNew);
+}
+function clearDetailFields() {
+  ["fBrand","fModel","fSerial","fInv","fDop","fIssue","fAcc"].forEach(id => $(id).value = "");
+  $("fCond").value = "Working"; $("fPhoto").value = ""; pendingPhoto = "";
+  $("fQty").value = "1";
+  ["eName","ePhone","eType","eModel","eSerial"].forEach(id => $(id).textContent = "");
+}
+
+function saveNew(oneMore) {
+  const model = $("fModel").value.trim(), serial = $("fSerial").value.trim();
+  $("eModel").textContent = model ? "" : "Please type the model";
+  $("eSerial").textContent = serial ? "" : "Please type the serial number";
+  let ok = !!model && !!serial;
+  if (serial && serialTaken(serial)) { $("eSerial").textContent = "This serial is already saved"; ok = false; }
+  if (storeMode && !$("fStaff").value.trim()) { showToast("Type our staff name"); return; }
+  if (!ok) { showToast("Please fill the red boxes"); return; }
+
+  const type = selectedType();
+  if (type && !settings.customTypes.includes(type) && !BASE_TYPES.includes(type)) settings.customTypes.push(type);
+
+  let ticket = storeMode ? null : findTicket($("fTicket").value);
+  if (!ticket) {
+    ticket = { id: newTicketId(), name: storeMode ? "Store pickup" : $("fName").value.trim(), phone: storeMode ? "" : $("fPhone").value.trim(), date: today(), store: storeMode, items: [] };
+    tickets.unshift(ticket);
+  }
+  const fresh = $("fTicket").value === "new";
+  ticket.items.push({
+    id: nextItemId++, type, brand: $("fBrand").value.trim(), model, serial,
+    dop: fresh ? $("fDop").value : "", inv: fresh ? $("fInv").value.trim() : "",
+    qty: fresh ? (parseInt($("fQty").value) || 1) : 1, collectedBy: $("fStaff").value.trim(), issue: $("fIssue").value.trim(), acc: $("fAcc").value.trim(), cond: $("fCond").value, photo: pendingPhoto, status: "In shop", result: "", oldSerials: [], deliveredOn: "",
+    history: [{ date: today(), text: "In shop (received)" }]
+  });
+  save();
+
+  const sn = $("fStaff").value.trim();
+  if (sn) { settings.staffNames = settings.staffNames || []; if (!settings.staffNames.includes(sn)) settings.staffNames.push(sn); save(); renderStaffList(); }
+  const newItem = ticket.items[ticket.items.length - 1];
+  const bookingMsg = fillText(settings.tpl.received, ticket, newItem, "In shop", "");
+  if (!storeMode) window.open(`sms:+91${ticket.phone}?body=${encodeURIComponent(bookingMsg)}`, "_blank");
+
+  showToast(`Saved in ${ticket.id}`);
+  if (oneMore) {
+    refreshTicketSelect(ticket.id);
+    clearDetailFields();
+    $("fCustomType").value = "";
+    renderTypeChips();
+    showStep(2);
+  } else {
+    selectedTicket = ticket.id;
+    go("list");
+    renderDetail();
+  }
+}
+
+// ---------- List and details ----------
+function renderList() {
+  const q = $("search").value.trim().toLowerCase();
+  const rows = tickets.filter(t => {
+    const hay = [t.id, t.name, t.phone, ...t.items.map(i => i.serial + " " + i.model)].join(" ").toLowerCase();
+    return !q || hay.includes(q);
+  });
+  $("tList").innerHTML = rows.length ? rows.map(t => {
+    const late = t.items.some(i => isLate(t, i));
+    return `<div class="cust">
+      <div><b>${esc(t.name)}</b> ${t.store ? `<span class="pill s2">Store pickup</span>` : ""} ${late ? `<span class="pill late-pill">Late</span>` : ""}<div class="sub">${t.id} · ${t.phone} · ${t.items.length} items</div></div>
+      <button class="btn go sm" onclick="openTicket('${t.id}')">Open</button>
+    </div>`;
+  }).join("") : `<div class="empty">No product found</div>`;
+}
+function openTicket(tid) {
+  selectedTicket = tid;
+  renderDetail();
+  $("detailCard").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+function renderDetail() {
+  const t = findTicket(selectedTicket);
+  $("detailCard").hidden = !t;
+  if (!t) return;
+  $("dTitle").textContent = `${t.name} · ${t.id}`;
+  $("dSub").textContent = `${t.phone} · Received ${fmt(t.date)} · ${daysBetween(t.date, today())} days in shop`;
+  $("dItems").innerHTML = t.items.map(i => `
+    <div class="item ${isLate(t, i) ? "late" : ""}">
+      <div class="item-top">
+        <div>
+          <b>${esc(i.type)}</b> ${isLate(t, i) ? `<span class="pill late-pill">Late</span>` : ""}
+          <div class="sub">${esc(i.brand)} ${esc(i.model)} · Serial ${esc(i.serial)}</div>
+          <div class="sub">Invoice ${esc(i.inv) || "-"} · Purchased ${fmt(i.dop)}${i.qty > 1 ? " · Qty " + i.qty : ""}</div>
+          ${i.collectedBy ? `<div class="sub">Collected by ${esc(i.collectedBy)}</div>` : ""}${i.issue ? `<div class="sub">Issue: ${esc(i.issue)}</div>` : ""}${i.acc ? `<div class="sub">Accessories: ${esc(i.acc)}</div>` : ""}${i.cond ? `<div class="sub">Condition: ${esc(i.cond)}</div>` : ""}${i.photo ? `<img src="${i.photo}" style="width:90px;height:90px;object-fit:cover;border-radius:12px;margin-top:6px">` : ""}
+          ${i.oldSerials.length ? `<div class="sub">Old serial: ${i.oldSerials.join(", ")}</div>` : ""}
+          <div style="margin-top:8px">${warrantyPill(i)}</div>
+        </div>
+        <div style="text-align:right">${pill(i.status)}${i.result ? `<div class="sub" style="margin-top:6px">${i.result}</div>` : ""}</div>
+      </div>
+      <div class="item-actions">
+        <button class="btn go sm" onclick="openItem(${i.id})">Change status</button>
+        <button class="btn ghost sm" onclick="editItem(${i.id})">Edit product</button>
+      </div>
+    </div>`).join("");
+  $("dHist").innerHTML = t.items.flatMap(i => i.history.map(h => ({ ...h, label: i.type })))
+    .sort((a, b) => a.date < b.date ? 1 : -1)
+    .map(h => `<div><b>${fmt(h.date)}</b> · ${esc(h.label)} · ${esc(h.text)}</div>`).join("") || `<div class="sub">No history yet</div>`;
+  makeQR();
+}
+function makeQR() {
+  const box = $("qrBox");
+  box.innerHTML = "";
+  const link = location.href.split("#")[0] + "#track";
+  try {
+    if (typeof QRCode !== "undefined") {
+      const holder = document.createElement("div"); holder.className = "qr";
+      box.appendChild(holder);
+      new QRCode(holder, { text: link, width: 110, height: 110 });
+      box.insertAdjacentHTML("beforeend", `<div class="sub" style="margin-top:6px">Customer can scan this to check status</div>`);
+    }
+  } catch (e) { box.innerHTML = ""; }
+}
+
+// ---------- Edit product and customer ----------
+function editItem(itemId) {
+  const f = findItem(itemId);
+  if (!f) return;
+  editing = { itemId, tid: f.t.id };
+  const i = f.i;
+  $("eeType").value = i.type; $("eeBrand").value = i.brand; $("eeModel").value = i.model;
+  $("eeSerial").value = i.serial; $("eeInv").value = i.inv || ""; $("eeDop").value = i.dop || "";
+  $("eeQty").value = i.qty || 1;
+  ["eeEModel","eeESerial"].forEach(id => $(id).textContent = "");
+  $("editOverlay").hidden = false;
+}
+function closeEdit() { $("editOverlay").hidden = true; editing = null; }
+function saveEdit() {
+  const f = findItem(editing.itemId);
+  const model = $("eeModel").value.trim(), serial = $("eeSerial").value.trim(), type = $("eeType").value.trim();
+  $("eeEModel").textContent = model ? "" : "Please type the model";
+  $("eeESerial").textContent = serial ? "" : "Please type the serial number";
+  if (!model || !serial || !type) { showToast("Please fill the red boxes"); return; }
+  if (serialTaken(serial, editing.itemId)) { $("eeESerial").textContent = "This serial is already saved"; return; }
+  if (!BASE_TYPES.includes(type) && !settings.customTypes.includes(type)) settings.customTypes.push(type);
+  const i = f.i;
+  if (i.serial !== serial) i.history.push({ date: today(), text: `Serial corrected to ${serial}` });
+  Object.assign(i, {
+    type, brand: $("eeBrand").value.trim(), model, serial,
+    inv: $("eeInv").value.trim(), dop: $("eeDop").value,
+    qty: parseInt($("eeQty").value) || 1
+  });
+  i.history.push({ date: today(), text: "Product details edited" });
+  closeEdit();
+  save(); renderDetail(); renderStats();
+  showToast("Product updated");
+}
+function editCustomer() {
+  const t = findTicket(selectedTicket);
+  if (!t) return;
+  editingCust = t.id;
+  $("ceName").value = t.name; $("cePhone").value = t.phone;
+  $("ceEName").textContent = ""; $("ceEPhone").textContent = "";
+  $("custOverlay").hidden = false;
+}
+function closeCust() { $("custOverlay").hidden = true; editingCust = null; }
+function saveCust() {
+  const t = findTicket(editingCust);
+  const name = $("ceName").value.trim(), phone = $("cePhone").value.trim();
+  $("ceEName").textContent = name ? "" : "Please type name";
+  $("ceEPhone").textContent = /^\d{10}$/.test(phone) ? "" : "Phone must be 10 digits";
+  if (!name || !/^\d{10}$/.test(phone)) return;
+  t.name = name; t.phone = phone;
+  closeCust();
+  save(); renderDetail(); renderList();
+  showToast("Customer updated");
+}
+
+// ---------- Ready to deliver ----------
+function renderReady() {
+  const items = tickets.flatMap(t => t.items.filter(i => i.status === "Ready for delivery").map(i => ({ t, i })));
+  $("rList").innerHTML = items.length ? items.map(({ t, i }) => `
+    <div class="cust">
+      <div><b>${esc(t.name)}</b><div class="sub">${esc(i.type)} · ${esc(i.brand)} ${esc(i.model)} · ${t.phone}</div></div>
+      <button class="btn wa sm" onclick="openItem(${i.id})">Send SMS</button>
+    </div>`).join("") : `<div class="empty">Nothing ready right now</div>`;
+}
+
+// ---------- Status popup ----------
+function openItem(itemId) {
+  const f = findItem(itemId);
+  if (!f) return;
+  modal = { itemId, status: f.i.status, result: f.i.result || "Service done" };
+  $("mTitle").textContent = `${f.i.type} · ${f.i.brand} ${f.i.model}`;
+  $("mSub").textContent = `${f.t.name} · ${f.t.id}`;
+  $("mNBrand").value = ""; $("mNModel").value = ""; $("mNSerial").value = "";
+  $("mEserial").textContent = "";
+  $("mNote").value = "";
+  $("mSend").checked = true;
+  $("mRecv").value = ""; $("mConfirm").checked = false;
+  renderModalChoices();
+  fillMsg();
+  $("overlay").hidden = false;
+}
+function renderModalChoices() {
+  $("mStatus").innerHTML = STATUSES.map((s, idx) =>
+    `<button class="chip ${s === modal.status ? "on" : ""}" onclick="pickStatus(${idx})">${s}</button>`).join("");
+  $("mResult").innerHTML = RESULTS.map((r, idx) =>
+    `<button class="chip ${r === modal.result ? "on" : ""}" onclick="pickResult(${idx})">${r}</button>`).join("");
+  $("mReplace").hidden = modal.result !== "Replaced";
+  $("mDeliver").hidden = modal.status !== "Delivered";
+}
+function pickStatus(idx) { modal.status = STATUSES[idx]; renderModalChoices(); fillMsg(); }
+function pickResult(idx) { modal.result = RESULTS[idx]; renderModalChoices(); fillMsg(); }
+
+function templateKey(status) {
+  if (status === "Ready for delivery") return "ready";
+  if (status === "Delivered") return "delivered";
+  if (status === "In service" || status === "In transit") return "service";
+  return "received";
+}
+function fillText(tpl, t, i, status, result) {
+  const map = { name: t.name, item: i.type, model: `${i.brand} ${i.model}`.trim(), serial: i.serial, ticket: t.id, status, result: result || "", shop: SHOP };
+  return tpl.replace(/\{(\w+)\}/g, (m, k) => map[k] !== undefined ? map[k] : m);
+}
+function fillMsg() {
+  const f = findItem(modal.itemId);
+  let text = fillText(settings.tpl[templateKey(modal.status)], f.t, f.i, modal.status, modal.result);
+  if (modal.result === "Replaced") text += " It has been replaced with a new unit.";
+  if (modal.result === "Returned") text += " It is returned without repair.";
+  $("mMsg").value = text;
+}
+function closeModal() { $("overlay").hidden = true; modal = null; }
+
+function confirmItem() {
+  const f = findItem(modal.itemId);
+  const t = f.t, i = f.i;
+  let newSerial = "";
+  if (modal.result === "Replaced") {
+    newSerial = $("mNSerial").value.trim();
+    if (!newSerial) { $("mEserial").textContent = "Please type the new serial number"; return; }
+    if (serialTaken(newSerial, i.id)) { $("mEserial").textContent = "This serial is already saved"; return; }
+  }
+  if (modal.status === "Delivered") {
+    if (!$("mRecv").value.trim()) { showToast("Type who received the product"); return; }
+    if (!$("mConfirm").checked) { showToast("Please tick: customer confirmed"); return; }
+  }
+  const note = $("mNote").value.trim();
+  const parts = [modal.status, modal.result];
+  if (modal.result === "Replaced") {
+    i.oldSerials.push(i.serial);
+    i.serial = newSerial;
+    i.brand = $("mNBrand").value.trim() || i.brand;
+    i.model = $("mNModel").value.trim() || i.model;
+    parts.push(`Replaced, new serial ${newSerial}`);
+  }
+  if (note) parts.push(note);
+  if (modal.status === "Delivered") parts.push(`Received by ${$("mRecv").value.trim()}, customer confirmed`);
+  i.status = modal.status;
+  i.result = modal.result;
+  if (modal.status === "Delivered") i.deliveredOn = today();
+  i.history.push({ date: today(), text: parts.join(" · ") });
+  const msg = $("mMsg").value, send = $("mSend").checked;
+  closeModal();
+  save(); renderStats(); renderDetail();
+  if (!$("pReady").hidden) renderReady();
+  if (!$("pList").hidden) renderList();
+  showToast("Status saved");
+  if (send) window.open(`sms:+91${t.phone}?body=${encodeURIComponent(msg)}`, "_blank");
+}
+
+// ---------- Customer track ----------
+function trackNow() {
+  const q = $("trackQ").value.trim();
+  const found = tickets.filter(t => t.id.toLowerCase() === q.toLowerCase() || t.phone === q);
+  $("trackResult").innerHTML = !q ? "" : found.length ? found.map(t => `
+    <div>
+      <p style="font-size:19px;font-weight:800;margin:0 0 2px">${esc(t.name)} · ${t.id}</p>
+      <p class="sub" style="margin:0 0 12px">${SHOP}</p>
+      ${t.items.map(i => `
+        <div class="item">
+          <b>${esc(i.type)}</b> · ${esc(i.brand)} ${esc(i.model)}<br>
+          <div style="margin-top:8px">${pill(i.status)}</div>
+          ${i.result ? `<div class="sub" style="margin-top:6px">${i.result}</div>` : ""}
+          <div style="margin-top:8px">${warrantyPill(i)}</div>
+        </div>`).join("")}
+      <h3>History</h3>
+      <div class="hist">${t.items.flatMap(i => i.history.map(h => ({ ...h, label: i.type }))).sort((a, b) => a.date < b.date ? 1 : -1).map(h => `<div><b>${fmt(h.date)}</b> · ${esc(h.label)} · ${esc(h.text)}</div>`).join("")}</div>
+    </div>`).join("") : `<div class="sub">No ticket found. Please check the ticket ID or phone number.</div>`;
+}
+
+// ---------- Stats ----------
+function renderStats() {
+  const items = allItems();
+  const late = tickets.reduce((n, t) => n + t.items.filter(i => isLate(t, i)).length, 0);
+  $("sTickets").textContent = tickets.filter(t => t.items.some(i => i.status !== "Delivered")).length;
+  $("sServ").textContent = items.filter(i => i.status === "In service").length;
+  $("sReady").textContent = items.filter(i => i.status === "Ready for delivery").length;
+  $("sDeliv").textContent = items.filter(i => i.deliveredOn === today()).length;
+  $("sLate").textContent = late;
+  const total = Math.max(items.length, 1);
+  $("bars").innerHTML = STATUSES.map(s => {
+    const n = items.filter(i => i.status === s).length;
+    return `<div class="bar-row"><span>${s}</span><div class="bar"><i style="width:${Math.round(n / total * 100)}%"></i></div><b>${n}</b></div>`;
+  }).join("");
+}
+
+// ---------- Settings and backup ----------
+function loadSettingsForm() {
+  $("tplReceived").value = settings.tpl.received;
+  $("tplService").value = settings.tpl.service;
+  $("tplReady").value = settings.tpl.ready;
+  $("tplDelivered").value = settings.tpl.delivered;
+}
+function saveSettings() {
+  settings.tpl = { received: $("tplReceived").value, service: $("tplService").value, ready: $("tplReady").value, delivered: $("tplDelivered").value };
+  save();
+  showToast("Templates saved");
+}
+function makeBackup() {
+  $("backupText").value = JSON.stringify({ v: 2, tickets, settings, nextTicketNo, nextItemId });
+  showToast("Backup ready. Copy the text.");
+}
+function restoreBackup() {
+  try {
+    const d = JSON.parse($("restoreText").value.trim());
+    if (!d.tickets) throw new Error("bad");
+    tickets = d.tickets; settings = d.settings || settings;
+    settings.tpl = { ...DEFAULT_TPL, ...(settings.tpl || {}) };
+    nextTicketNo = d.nextTicketNo || tickets.length + 1;
+    nextItemId = d.nextItemId || 1;
+    save();
+    $("restoreText").value = "";
+    renderStats();
+    showToast("Restored");
+    go("home");
+  } catch (e) { showToast("This backup text is not valid"); }
+}
+
+// ---------- Toast ----------
+let toastTimer;
+function showToast(msg) {
+  const t = $("toast");
+  t.textContent = msg; t.style.display = "block";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.style.display = "none", 1800);
+}
+
+// ---------- Init ----------
+$("fSerial").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("fSerial").value = $("fSerial").value.trim(); $("fModel").focus(); } });
+$("todayLabel").textContent = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+$("fPhoto").addEventListener("change", e => {
+  const f = e.target.files[0];
+  pendingPhoto = "";
+  if (!f) return;
+  if (f.size > 400000) { showToast("Photo too big. Choose a smaller photo"); e.target.value = ""; return; }
+  const r = new FileReader();
+  r.onload = () => { pendingPhoto = r.result; };
+  r.readAsDataURL(f);
+});
+if (!load()) { seed(); save(); }
+renderStaffList();
+renderStats();
+refreshTicketSelect("new");
+renderTypeChips();
+showStep(1);
+if (location.hash === "#track") go("track");
+</script>
+</body>
+</html>
